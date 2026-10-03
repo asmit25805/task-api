@@ -80,3 +80,48 @@ def find_task(task_id: int) -> dict:
     raise NotFound(task_id)
 
 
+# ---------- Endpoints ----------
+
+@app.get("/")
+def root():
+    return {"name": "Task API", "version": "1.0", "endpoints": ["/tasks"]}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.get("/tasks")
+def list_tasks():
+    return tasks
+
+
+@app.get("/tasks/{task_id}")
+def get_task(task_id: int):
+    return find_task(task_id)
+
+
+@app.post("/tasks", status_code=201)
+def create_task(body: TaskCreate):
+    global next_id
+    task = {"id": next_id, "title": body.title, "done": False}
+    next_id += 1
+    tasks.append(task)
+    return task
+
+
+@app.put("/tasks/{task_id}")
+def update_task(task_id: int, body: TaskUpdate):
+    task = find_task(task_id)
+    if body.title is not None:
+        task["title"] = body.title
+    if body.done is not None:
+        task["done"] = body.done
+    return task
+
+
+@app.delete("/tasks/{task_id}", status_code=204)
+def delete_task(task_id: int):
+    tasks.remove(find_task(task_id))
+    return Response(status_code=204)
